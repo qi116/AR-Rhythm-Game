@@ -4,6 +4,11 @@ import random
 rectangle_frames = 0
 rectangle_coords = (200,200)
 
+def image_loader(self, image, path):
+    img2 = Image.open(r'path')
+    image.paste(img2, (50, 50), mask = img2)
+    return image
+
 def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
   normalized_x1 = rectangle_coords1[0]/1280.0
   normalized_y1 = rectangle_coords1[1]/720.0

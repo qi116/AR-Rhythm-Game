@@ -13,11 +13,14 @@ def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
 
 def handle(results):
   #print('here')
-  leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
-  lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
+  try: 
+    leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
+    lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
 
-  rightx = (results.pose_landmarks.landmark[20].x + results.pose_landmarks.landmark[16].x) / 2
-  righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
+    rightx = (results.pose_landmarks.landmark[20].x + results.pose_landmarks.landmark[16].x) / 2
+    righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
+  except:
+    return
 
   if (rightx < .5 and righty < .5):
     print("top right - RH")

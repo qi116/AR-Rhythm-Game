@@ -1,13 +1,17 @@
 import cv2
 import mediapipe as mp
 import random
+import os
+import time
+from schedulers import opensong
+from timer import Timer
 rectangle_frames = 0
 rectangle_coords = (200,200)
 
-def image_loader(self, image, path):
-    img2 = Image.open(r'path')
-    image.paste(img2, (50, 50), mask = img2)
-    return image
+# def image_loader(self, image, path):
+#     img2 = Image.open(r'path')
+#     image.paste(img2, (50, 50), mask = img2)
+#     return image
 
 def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
   normalized_x1 = rectangle_coords1[0]/1280.0
@@ -16,25 +20,51 @@ def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
   normalized_y2 = rectangle_coords2[1]/720.0
   return normalized_x1 < landmark[17].x < normalized_x2 and normalized_y1 < landmark[17].y < normalized_y2
 
-def handle(results):
+screen_width = 640
+screen_height = 360
+
+
+
+
+clicks = opensong(os.getcwd() + "\songs\sasageyo.txt")
+for click in clicks:
+  print(click)
+
+def handle(results, image):
   #print('here')
+
+  BLUE = (255, 0, 0)
+  radius = 25
+
   try: 
     leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
     lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
 
-    rightx = (results.pose_landmarks.landmark[20].x + results.pose_landmarks.landmark[16].x) / 2
+    rightx = (results.pose_landmarks.landmark[22].x + results.pose_landmarks.landmark[18].x) / 2
     righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
-  except:
-    return
 
-  if (rightx < .5 and righty < .5):
-    print("top right - RH")
-  if (rightx < .5 and righty > .5):
-    print("bottom right - RH")
-  if (rightx > .5 and righty < .5):
-    print("top left - RH")
-  if (rightx > .5 and righty > .5):
-    print("bottom left - RH")
+    centerR = (int(rightx*(screen_width)),int(righty*(screen_height)))
+    centerL = (int(leftx*(screen_width)),int(lefty*(screen_height)))
+
+    if (rightx < .5 and righty < .5):
+      print("top right - RH")
+    if (rightx < .5 and righty > .5):
+      print("bottom right - RH")
+    if (rightx > .5 and righty < .5):
+      print("top left - RH")
+    if (rightx > .5 and righty > .5):
+      print("bottom left - RH")
+
+
+    image = cv2.circle(image, centerR, 50, BLUE, 2)
+    image = cv2.circle(image, centerL, 50, BLUE, 2)
+    return image
+  except:
+    center = (0,0)
+    image = cv2.circle(image, center, 50, BLUE, 2)
+    image = cv2.circle(image, center, 50, BLUE, 2)
+    return image
+
 
   if (leftx < .5 and lefty < .5):
     print("top right - LH")
@@ -55,12 +85,19 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 # cap.set(3, 800)
 # cap.set(4, 600)
 # print ("Frame resolution set to: (" + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + "; " + str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) + ")")
+
+currentHitObject = 0
+timer = Timer()
+timer.start()
+
 with mp_pose.Pose(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as pose:
   while cap.isOpened():
     success, image = cap.read()
-    image = cv2.resize(image, (1280,720), interpolation =cv2.INTER_AREA)
+    image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
+
+
     if not success:
       print("Ignoring empty camera frame.")
       # If loading a video, use 'break' instead of 'continue'.
@@ -73,7 +110,9 @@ with mp_pose.Pose(
     results = pose.process(image)
 
     #print(results.pose_landmarks.landmark[17].y)
-    # handle(results)
+    image = handle(results, image)
+
+    #image = imageStore[1]
     # Draw the pose annotation on the image.
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -97,6 +136,12 @@ with mp_pose.Pose(
         rectangle_frames = 1
         print("hit")
       rectangle_frames-=1 
+    if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
+      curr = clicks[currentHitObject]
+      image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
+      currentHitObject+=1
+
+        
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(5) & 0xFF == 27:
       break

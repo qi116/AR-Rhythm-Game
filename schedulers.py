@@ -2,6 +2,17 @@ import cv2
 import mediapipe as mp
 import random
 
+def opensong(path):
+        file = open(path, 'r')
+        lines = file.readlines()
+        clicks = []
+        for line in lines:
+            lineSplit = line.split(",")
+            #h = Hit(int(lineSplit[0]), int(lineSplit[1]), int(lineSplit[2]), int(lineSplit[3]))
+            h = None # make h to be Hittable stuff
+            clicks.append(h)
+        return clicks
+
 class Scheduler:
     def __init__(self,times,locations):
         self.i = 0
@@ -14,6 +25,7 @@ class Scheduler:
     def __next__(self):
         print("next")
         raise NotImplementedError
+    
 
 class OsuScheduler(Scheduler):
     def __init__(self,path,duration=1.0,size=(1280,720)):

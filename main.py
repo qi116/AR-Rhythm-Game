@@ -5,13 +5,15 @@ import os
 import time
 from schedulers import opensong
 from timer import Timer
+from playsound import playsound
+from PIL import Image
 rectangle_frames = 0
 rectangle_coords = (200,200)
 
-# def image_loader(self, image, path):
-#     img2 = Image.open(r'path')
-#     image.paste(img2, (50, 50), mask = img2)
-#     return image
+def image_loader(self, coord, path):
+    img2 = Image.open(os.getcwd() + "/msword.jpeg")
+    image.paste(img2, coord, mask = img2)
+    return image
 
 def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
   normalized_x1 = rectangle_coords1[0]/1280.0
@@ -26,7 +28,7 @@ screen_height = 360
 
 
 
-clicks = opensong(os.getcwd() + "\songs\sasageyo.txt")
+clicks = opensong(os.getcwd() + "/songs/sasageyo.txt")
 for click in clicks:
   print(click)
 
@@ -58,11 +60,14 @@ def handle(results, image):
 
     image = cv2.circle(image, centerR, 50, BLUE, 2)
     image = cv2.circle(image, centerL, 50, BLUE, 2)
+    image = image_loader(centerR, image)
+    image = image_loader(centerL, image)
     return image
   except:
     center = (0,0)
     image = cv2.circle(image, center, 50, BLUE, 2)
     image = cv2.circle(image, center, 50, BLUE, 2)
+    image = image_loader(center, image)
     return image
 
 

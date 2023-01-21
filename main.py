@@ -65,7 +65,7 @@ with mp_pose.Pose(
     results = pose.process(image)
 
     #print(results.pose_landmarks.landmark[17].y)
-    handle(results)
+    # handle(results)
     # Draw the pose annotation on the image.
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -77,15 +77,16 @@ with mp_pose.Pose(
     # Flip the image horizontally for a selfie-view display.
     if rectangle_frames == 0:
       if random.randint(0,60) > 55:
-        rectangle_frames = 100
+        rectangle_frames = 50
         rectangle_coords = (int(random.random()*(1280-100)),int(random.random()*(720-100)))
         rectangle_coords2 = (rectangle_coords[0]+100,rectangle_coords[1]+100)
     else:
-      print("rectangle:",rectangle_coords)
+      print("rectangle:",rectangle_coords,rectangle_coords2)
+      print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
       image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
       hit = detect_hit(results.pose_landmarks.landmark,rectangle_coords,rectangle_coords2)
       if hit:
-        rectangle_frames = 0
+        rectangle_frames = 1
         print("hit")
       rectangle_frames-=1 
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))

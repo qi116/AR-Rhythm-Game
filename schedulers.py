@@ -45,11 +45,18 @@ class Hittable:
             self.time_tup = time_tup
             self.location_tup = location_tup
             self.type = type
+            self.phases = 10
+            self.load_time = 1.5
     def isShown(self,time):
-        return self.time_tup[0] <= time <= self.time_tup[1]
+        return self.time_tup[0]-1.5 <= time <= self.time_tup[1] #includes loading time
 
-    def apply(image):
-        ...
+    def apply(self,image,time):
+        if self.time_tup[0]-1.5 < time < self.time_tup[0]:
+            phase = (self.time_tup[0]-time)/1.5
+            color = (255*phase,255*(1-phase),0)
+            return cv2.rectangle(image, self.location_tup, (x -100 for x in self.location_tup), color, 7)
+        elif self.time_tup[0] < time < self.time_tup[1]:
+            return cv2.rectangle(image, self.location_tup, (x -100 for x in self.location_tup), (0,255,0), 7)
 
     def __str__(self):
         return f"{self.time_tup} location:{self.location_tup},type: {self.type}"

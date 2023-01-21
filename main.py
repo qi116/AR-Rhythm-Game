@@ -3,58 +3,28 @@ import mediapipe as mp
 import random
 import os
 import time
-
+from schedulers import opensong
+from timer import Timer
 rectangle_frames = 0
 rectangle_coords = (200,200)
+
+# def image_loader(self, image, path):
+#     img2 = Image.open(r'path')
+#     image.paste(img2, (50, 50), mask = img2)
+#     return image
+
+def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
+  normalized_x1 = rectangle_coords1[0]/1280.0
+  normalized_y1 = rectangle_coords1[1]/720.0
+  normalized_x2 = rectangle_coords2[0]/1280.0
+  normalized_y2 = rectangle_coords2[1]/720.0
+  return normalized_x1 < landmark[17].x < normalized_x2 and normalized_y1 < landmark[17].y < normalized_y2
 
 screen_width = 640
 screen_height = 360
 
-class Hit:
-  def __init__(self, x, y, time, type): #time is in miliseconds
-    self.x = x
-    self.y = y
-    self.time = time
-    self.type = type
-  def __str__(self):
-     return "x: " + str(self.x) + " y: " + str(self.y) + " time (ms): " + str(self.time) + " type: " + str(self.type)
-def opensong(path):
-  file = open(path, 'r')
-  lines = file.readlines()
-  clicks = []
-  for line in lines:
-    lineSplit = line.split(",")
-    h = Hit(int(lineSplit[0]), int(lineSplit[1]), int(lineSplit[2]), int(lineSplit[3]))
-    clicks.append(h)
-  return clicks
 
-class TimerError(Exception):
-    """A custom exception used to report errors in use of Timer class"""
 
-class Timer:
-    def __init__(self):
-        self._start_time = None
-
-    def start(self):
-        """Start a new timer"""
-        if self._start_time is not None:
-            raise TimerError(f"Timer is running. Use .stop() to stop it")
-
-        self._start_time = time.perf_counter()
-    def getTime(self):
-      if self._start_time is None:
-            raise TimerError(f"Timer is not running. Use .start() to start it")
-
-      elapsed_time = time.perf_counter() - self._start_time
-      return elapsed_time
-    def stop(self):
-        """Stop the timer, and report the elapsed time"""
-        if self._start_time is None:
-            raise TimerError(f"Timer is not running. Use .start() to start it")
-
-        elapsed_time = time.perf_counter() - self._start_time
-        self._start_time = None
-        print(f"Elapsed time: {elapsed_time:0.4f} seconds")
 
 clicks = opensong(os.getcwd() + "\songs\sasageyo.txt")
 for click in clicks:
@@ -127,6 +97,7 @@ with mp_pose.Pose(
     success, image = cap.read()
     image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
 
+
     if not success:
       print("Ignoring empty camera frame.")
       # If loading a video, use 'break' instead of 'continue'.
@@ -153,17 +124,24 @@ with mp_pose.Pose(
     # Flip the image horizontally for a selfie-view display.
     if rectangle_frames == 0:
       if random.randint(0,60) > 55:
-        rectangle_frames = 20
-        rectangle_coords = (int(random.random()*(screen_width-100)),int(random.random()*(screen_height-100)))
+        rectangle_frames = 50
+        rectangle_coords = (int(random.random()*(1280-100)),int(random.random()*(720-100)))
+        rectangle_coords2 = (rectangle_coords[0]+100,rectangle_coords[1]+100)
     else:
-      rectangle_frames-=1
-      image = cv2.rectangle(image, rectangle_coords, (rectangle_coords[0]+100,rectangle_coords[1]+100), (255,0,0), 7)
-    
+      print("rectangle:",rectangle_coords,rectangle_coords2)
+      print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
+      image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
+      hit = detect_hit(results.pose_landmarks.landmark,rectangle_coords,rectangle_coords2)
+      if hit:
+        rectangle_frames = 1
+        print("hit")
+      rectangle_frames-=1 
     if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
       curr = clicks[currentHitObject]
       image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
       currentHitObject+=1
 
+        
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(5) & 0xFF == 27:
       break

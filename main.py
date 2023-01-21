@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import random
 import os
+import time
 
 rectangle_frames = 0
 rectangle_coords = (200,200)
@@ -23,9 +24,37 @@ def opensong(path):
   clicks = []
   for line in lines:
     lineSplit = line.split(",")
-    h = Hit(lineSplit[0], lineSplit[1], lineSplit[2], lineSplit[3])
+    h = Hit(int(lineSplit[0]), int(lineSplit[1]), int(lineSplit[2]), int(lineSplit[3]))
     clicks.append(h)
   return clicks
+
+class TimerError(Exception):
+    """A custom exception used to report errors in use of Timer class"""
+
+class Timer:
+    def __init__(self):
+        self._start_time = None
+
+    def start(self):
+        """Start a new timer"""
+        if self._start_time is not None:
+            raise TimerError(f"Timer is running. Use .stop() to stop it")
+
+        self._start_time = time.perf_counter()
+    def getTime(self):
+      if self._start_time is None:
+            raise TimerError(f"Timer is not running. Use .start() to start it")
+
+      elapsed_time = time.perf_counter() - self._start_time
+      return elapsed_time
+    def stop(self):
+        """Stop the timer, and report the elapsed time"""
+        if self._start_time is None:
+            raise TimerError(f"Timer is not running. Use .start() to start it")
+
+        elapsed_time = time.perf_counter() - self._start_time
+        self._start_time = None
+        print(f"Elapsed time: {elapsed_time:0.4f} seconds")
 
 clicks = opensong(os.getcwd() + "\songs\sasageyo.txt")
 for click in clicks:
@@ -86,6 +115,11 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 # cap.set(3, 800)
 # cap.set(4, 600)
 # print ("Frame resolution set to: (" + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + "; " + str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) + ")")
+
+currentHitObject = 0
+timer = Timer()
+timer.start()
+
 with mp_pose.Pose(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as pose:
@@ -124,6 +158,12 @@ with mp_pose.Pose(
     else:
       rectangle_frames-=1
       image = cv2.rectangle(image, rectangle_coords, (rectangle_coords[0]+100,rectangle_coords[1]+100), (255,0,0), 7)
+    
+    if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
+      curr = clicks[currentHitObject]
+      image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
+      currentHitObject+=1
+
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(5) & 0xFF == 27:
       break

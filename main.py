@@ -1,5 +1,34 @@
 import cv2
 import mediapipe as mp
+
+
+def handle(results):
+  #print('here')
+  leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
+  lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
+
+  rightx = (results.pose_landmarks.landmark[20].x + results.pose_landmarks.landmark[16].x) / 2
+  righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
+
+  # if (rightx < .5 and righty < .5):
+  #   print("top right - RH")
+  # if (rightx < .5 and righty > .5):
+  #   print("bottom right - RH")
+  # if (rightx > .5 and righty < .5):
+  #   print("top left - RH")
+  # if (rightx > .5 and righty > .5):
+  #   print("bottom left - RH")
+
+  if (leftx < .5 and lefty < .5):
+    print("top right - LH")
+  if (leftx < .5 and lefty > .5):
+    print("bottom right - LH")
+  if (leftx > .5 and lefty < .5):
+    print("top left - LH")
+  if (leftx > .5 and lefty > .5):
+    print("bottom left - LH")
+  
+
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
@@ -21,8 +50,8 @@ with mp_pose.Pose(
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pose.process(image)
 
-    print(results.pose_landmarks.landmark[17].x)
-
+    #print(results.pose_landmarks.landmark[17].y)
+    handle(results)
     # Draw the pose annotation on the image.
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -37,5 +66,3 @@ with mp_pose.Pose(
       break
 cap.release()
 
-def handle(result):
-  print('here')

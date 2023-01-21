@@ -15,6 +15,36 @@ class Scheduler:
         print("next")
         raise NotImplementedError
 
+class OsuScheduler(Scheduler):
+    def __init__(self,path,duration=1.0,size=(1280,720)):
+        data = []
+        self.duration = duration
+        with open(path,"r") as f:
+            data = f.read().split("\n")
+            data = [x.split(",") for x in data]
+            for row in data:
+                for i in range(len(row)):
+                    if i < 4:
+                        row[i] = int(row[i])
+                row[0]=row[0]/640.0*size[0]
+                row[1]= row[0]/480.0*size[1]
+        self.data = data
+        super().__init__([],[])
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.i < len(self.data):
+            center = self.data[self.i][2]/1000.0
+            time_tup = (center - self.duration/2,center + self.duration/2)
+            location_tup = (self.data[self.i][0],self.data[self.i][1])
+            out = Hittable(time_tup,location_tup)
+            self.i += 1
+            return out
+        else:
+            raise StopIteration
+
 class RandomScheduler(Scheduler):
     def __init__(self,duration,length,size=(1280,720)):
         times = []
@@ -39,7 +69,6 @@ class RandomScheduler(Scheduler):
         else:
             raise StopIteration
             
-        
 class Hittable:
     def __init__(self,time_tup,location_tup,type="circle") -> None:
             self.time_tup = time_tup
@@ -58,12 +87,14 @@ class Hittable:
         elif self.time_tup[0] < time < self.time_tup[1]:
             return cv2.rectangle(image, self.location_tup, (x -100 for x in self.location_tup), (0,255,0), 7)
 
+
+
     def __str__(self):
         return f"{self.time_tup} location:{self.location_tup},type: {self.type}"
 
         
 if __name__ == "__main__":
-    s = RandomScheduler(2,70)
+    s = OsuScheduler("./sasageyo.txt")
     for hit in iter(s):
         print(hit)
 

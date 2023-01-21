@@ -10,14 +10,14 @@ def handle(results):
   rightx = (results.pose_landmarks.landmark[20].x + results.pose_landmarks.landmark[16].x) / 2
   righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
 
-  # if (rightx < .5 and righty < .5):
-  #   print("top right - RH")
-  # if (rightx < .5 and righty > .5):
-  #   print("bottom right - RH")
-  # if (rightx > .5 and righty < .5):
-  #   print("top left - RH")
-  # if (rightx > .5 and righty > .5):
-  #   print("bottom left - RH")
+  if (rightx < .5 and righty < .5):
+    print("top right - RH")
+  if (rightx < .5 and righty > .5):
+    print("bottom right - RH")
+  if (rightx > .5 and righty < .5):
+    print("top left - RH")
+  if (rightx > .5 and righty > .5):
+    print("bottom left - RH")
 
   if (leftx < .5 and lefty < .5):
     print("top right - LH")

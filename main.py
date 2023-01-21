@@ -10,32 +10,33 @@ screen_width = 640
 screen_height = 360
 
 class Hit:
-  def __init__(self, x, y, time): #time is in miliseconds
+  def __init__(self, x, y, time, type): #time is in miliseconds
     self.x = x
     self.y = y
     self.time = time
+    self.type = type
   def __str__(self):
-     return "x: " + str(self.x) + " y: " + str(self.y) + " time (ms): " + str(self.time)
+     return "x: " + str(self.x) + " y: " + str(self.y) + " time (ms): " + str(self.time) + " type: " + str(self.type)
 def opensong(path):
   file = open(path, 'r')
   lines = file.readlines()
   clicks = []
   for line in lines:
     lineSplit = line.split(",")
-    h = Hit(lineSplit[0], lineSplit[1], lineSplit[2])
+    h = Hit(lineSplit[0], lineSplit[1], lineSplit[2], lineSplit[3])
     clicks.append(h)
   return clicks
 
-clicks = opensong(os.getcwd() + "\songs\photograph.txt")
+clicks = opensong(os.getcwd() + "\songs\sasageyo.txt")
 for click in clicks:
   print(click)
 
 def handle(results, image):
   #print('here')
+
   BLUE = (255, 0, 0)
-  
-  axes = 50, 50
-  angle = 0
+  radius = 25
+
   try: 
     leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
     lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
@@ -43,7 +44,8 @@ def handle(results, image):
     rightx = (results.pose_landmarks.landmark[22].x + results.pose_landmarks.landmark[18].x) / 2
     righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
 
-    center = (int(rightx*(screen_width)),int(righty*(screen_height)))
+    centerR = (int(rightx*(screen_width)),int(righty*(screen_height)))
+    centerL = (int(leftx*(screen_width)),int(lefty*(screen_height)))
 
     if (rightx < .5 and righty < .5):
       print("top right - RH")
@@ -55,10 +57,12 @@ def handle(results, image):
       print("bottom left - RH")
 
 
-    image = cv2.circle(image, center, 50, BLUE, 2)
+    image = cv2.circle(image, centerR, 50, BLUE, 2)
+    image = cv2.circle(image, centerL, 50, BLUE, 2)
     return image
   except:
     center = (0,0)
+    image = cv2.circle(image, center, 50, BLUE, 2)
     image = cv2.circle(image, center, 50, BLUE, 2)
     return image
 
@@ -102,6 +106,8 @@ with mp_pose.Pose(
 
     #print(results.pose_landmarks.landmark[17].y)
     image = handle(results, image)
+
+    #image = imageStore[1]
     # Draw the pose annotation on the image.
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)

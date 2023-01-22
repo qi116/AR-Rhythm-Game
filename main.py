@@ -7,12 +7,23 @@ from schedulers import opensong
 from timer import Timer
 from playsound import playsound
 from PIL import Image
+import numpy as np
 rectangle_frames = 0
 rectangle_coords = (200,200)
 
-def image_loader(self, coord, path):
-    img2 = Image.open(os.getcwd() + "/msword.jpeg")
-    image.paste(img2, coord, mask = img2)
+def image_loader(coord, image):
+    #image = Image.open(os.getcwd() + "/msword.jpeg", cv2.IMREAD_UNCHANGED)
+    img2 = cv2.imread(os.getcwd() + "/msword.jpeg", cv2.IMREAD_UNCHANGED)
+    size = 500
+    cv2.resize(img2, (size,size))
+    #img2gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(img2, 120, 255, cv2.THRESH_BINARY)
+    #image.paste(img2, coord, mask = img2)
+    roi = image[-size-10:-100, -size-10:-10]
+  
+    # Set an index of where the mask is
+    roi[np.where(mask)] = 0
+    roi += img2
     return image
 
 def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
@@ -28,9 +39,9 @@ screen_height = 360
 
 
 
-clicks = opensong(os.getcwd() + "/songs/sasageyo.txt")
-for click in clicks:
-  print(click)
+# clicks = opensong(os.getcwd() + "/songs/sasageyo.txt")
+# for click in clicks:
+#   print(click)
 
 def handle(results, image):
   #print('here')
@@ -58,16 +69,16 @@ def handle(results, image):
       print("bottom left - RH")
 
 
-    image = cv2.circle(image, centerR, 50, BLUE, 2)
-    image = cv2.circle(image, centerL, 50, BLUE, 2)
+    image = cv2.circle(image, centerR, radius, BLUE, -1)
+    image = cv2.circle(image, centerL, radius, BLUE, -1)
     image = image_loader(centerR, image)
     image = image_loader(centerL, image)
     return image
   except:
-    center = (0,0)
-    image = cv2.circle(image, center, 50, BLUE, 2)
-    image = cv2.circle(image, center, 50, BLUE, 2)
-    image = image_loader(center, image)
+    # center = (0,0)
+    # image = cv2.circle(image, center, radius, BLUE, 2)
+    
+    # image = image_loader(center, image)
     return image
 
 
@@ -93,6 +104,7 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
 currentHitObject = 0
 timer = Timer()
+#playsound(os.getcwd() + "\songs\sasageyo.mp3", block=False)
 timer.start()
 
 with mp_pose.Pose(
@@ -127,24 +139,24 @@ with mp_pose.Pose(
         mp_pose.POSE_CONNECTIONS,
         landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
     # Flip the image horizontally for a selfie-view display.
-    if rectangle_frames == 0:
-      if random.randint(0,60) > 55:
-        rectangle_frames = 50
-        rectangle_coords = (int(random.random()*(1280-100)),int(random.random()*(720-100)))
-        rectangle_coords2 = (rectangle_coords[0]+100,rectangle_coords[1]+100)
-    else:
-      print("rectangle:",rectangle_coords,rectangle_coords2)
-      print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
-      image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
-      hit = detect_hit(results.pose_landmarks.landmark,rectangle_coords,rectangle_coords2)
-      if hit:
-        rectangle_frames = 1
-        print("hit")
-      rectangle_frames-=1 
-    if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
-      curr = clicks[currentHitObject]
-      image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
-      currentHitObject+=1
+    # if rectangle_frames == 0:
+    #   if random.randint(0,60) > 55:
+    #     rectangle_frames = 50
+    #     rectangle_coords = (int(random.random()*(1280-100)),int(random.random()*(720-100)))
+    #     rectangle_coords2 = (rectangle_coords[0]+100,rectangle_coords[1]+100)
+    # else:
+    #   print("rectangle:",rectangle_coords,rectangle_coords2)
+    #   print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
+    #   image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
+    #   hit = detect_hit(results.pose_landmarks.landmark,rectangle_coords,rectangle_coords2)
+    #   if hit:
+    #     rectangle_frames = 1
+    #     print("hit")
+    #   rectangle_frames-=1 
+    # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
+    #   curr = clicks[currentHitObject]
+    #   image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
+    #   currentHitObject+=1
 
         
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))

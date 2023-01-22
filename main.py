@@ -71,8 +71,12 @@ def handle(results, image):
 
     image = cv2.circle(image, centerR, radius, BLUE, -1)
     image = cv2.circle(image, centerL, radius, BLUE, -1)
-    image = image_loader(centerR, image)
-    image = image_loader(centerL, image)
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    image = cv2.putText(image,'R',(centerR[0] - radius, centerR[1] + radius), font, 2,(255,255,255),2,cv2.LINE_AA)
+
+    # image = image_loader(centerR, image)
+    # image = image_loader(centerL, image)
     return image
   except:
     # center = (0,0)

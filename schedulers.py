@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import random
 
+counter = 1
 def opensong(path):
         file = open(path, 'r')
         lines = file.readlines()
@@ -52,7 +53,8 @@ class OsuScheduler(Scheduler):
             center = self.data[self.i][2]/1000.0
             time_tup = (center - self.duration/2,center + self.duration/2)
             location_tup = (self.data[self.i][0]+100,self.data[self.i][1]+100) #to make them stay on screen
-            out = Hittable(time_tup,location_tup)
+            type = self.data[self.i][3] 
+            out = Hittable(time_tup,location_tup,type)
             self.i += 1
             return out
         else:
@@ -86,10 +88,9 @@ class RandomScheduler(Scheduler):
             raise StopIteration
             
 class Hittable:
-    def __init__(self,time_tup,location_tup,type="circle") -> None:
+    def __init__(self,time_tup,location_tup,type) -> None:
             self.time_tup = time_tup
             self.location_tup = location_tup
-            print(location_tup)
             self.type = type
             self.phases = 10
             self.load_time = 1.5
@@ -99,12 +100,28 @@ class Hittable:
 
     def apply(self,image,time):
         if self.time_tup[0]-1.5 < time < self.time_tup[0]:
+            if (self.type == 5 or self.type == 6):
+                counter = 1
+            else:
+                counter += 1
             phase = (self.time_tup[0]-time)/1.5
+
             color = (255*phase,255*(1-phase),0)
-            return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
+            rec = cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
+            cv2.flip(image, 1)
+            cv2.putText(image, str(counter), (self.location_tup[0] + 50, self.location_tup[1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,0), cv2.LINE_AA)
+            cv2.flip(image, 1)
+            return rec
         elif self.time_tup[0] < time < self.time_tup[1]:
             self.hittable = True
-            return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,0,255), 7)
+            if (self.type == 5 or self.type == 6):
+                counter = 1
+            else:
+                counter += 1
+            rec = cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,0,255), 7)
+            cv2.flip(image, 1)
+            cv2.putText(image, str(counter), (self.location_tup[0] + 50, self.location_tup[1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,0), cv2.LINE_AA)
+            cv2.flip(image, 1)
         else:
             self.hittable = False
             return image

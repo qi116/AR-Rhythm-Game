@@ -51,7 +51,7 @@ class OsuScheduler(Scheduler):
         if self.i < len(self.data):
             center = self.data[self.i][2]/1000.0
             time_tup = (center - self.duration/2,center + self.duration/2)
-            location_tup = (self.data[self.i][0],self.data[self.i][1])
+            location_tup = (self.data[self.i][0],self.data[self.i][1]+100) #to make them stay on screen
             out = Hittable(time_tup,location_tup)
             self.i += 1
             return out
@@ -93,6 +93,7 @@ class Hittable:
             self.type = type
             self.phases = 10
             self.load_time = 1.5
+            self.hittable = False
     def isShown(self,time):
         return self.time_tup[0]-1.5 <= time <= self.time_tup[1] #includes loading time
 
@@ -102,8 +103,10 @@ class Hittable:
             color = (255*phase,255*(1-phase),0)
             return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
         elif self.time_tup[0] < time < self.time_tup[1]:
-            return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,255,0), 7)
+            self.hittable = True
+            return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,0,255), 7)
         else:
+            self.hittable = False
             return image
 
 

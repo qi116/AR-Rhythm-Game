@@ -63,7 +63,7 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
 currentHitObject = 0
 timer = Timer()
-#playsound(os.getcwd() + "\songs\sasageyo.mp3", block=False)
+playsound(os.getcwd() + "\songs\sasageyo.mp3", block=False)
 timer.start()
 hittable_stack = []
 scheduler = OsuScheduler("./sasageyo.txt",size=(screen_width,screen_height))
@@ -117,23 +117,26 @@ with mp_hands.Hands(
     # Draw the pose annotation on the image.
     
     # Flip the image horizontally for a selfie-view display.
-    try:
-      rectangle_coords =   hittable_stack[0].location_tup
-      rectangle_coords2 = (rectangle_coords[0]-100,rectangle_coords[1]-100)
-      # print("rectangle:",rectangle_coords,rectangle_coords2,"time:",t)
-      # print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
-      # image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
-      if results.multi_hand_landmarks:
-        for lands in results.multi_hand_landmarks:
-          hit = detect_hit(lands.landmark,rectangle_coords2,rectangle_coords)
-          if hit:
-            print("hit") 
-    # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
-    #   curr = clicks[currentHitObject]
-    #   image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
-    #   currentHitObject+=1
-    except Exception as e:
-      print(e)
+    if len(hittable_stack):
+      try:
+        rectangle_coords =   hittable_stack[0].location_tup
+        rectangle_coords2 = (rectangle_coords[0]-100,rectangle_coords[1]-100)
+        # print("rectangle:",rectangle_coords,rectangle_coords2,"time:",t)
+        # print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
+        # image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
+        if results.multi_hand_landmarks:
+          for lands in results.multi_hand_landmarks:
+            hit = detect_hit(lands.landmark,rectangle_coords2,rectangle_coords)
+            if hit and hittable_stack[0].hittable:
+              print("hit") 
+              hittable_stack.pop(0)
+              break
+      # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
+      #   curr = clicks[currentHitObject]
+      #   image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
+      #   currentHitObject+=1
+      except Exception as e:
+        print(e)
         
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(5) & 0xFF == 27:

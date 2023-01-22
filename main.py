@@ -86,6 +86,12 @@ with mp_hands.Hands(
     success, image = cap.read()
     image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
     t = timer.getTime()
+    image.flags.writeable = False
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = hands.process(image)
+
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     while scheduler.next_time() < t:
       hold = next(scheduler)
       if hold == None:
@@ -106,12 +112,7 @@ with mp_hands.Hands(
 
     # To improve performance, optionally mark the image as not writeable to
     # pass by reference.
-    image.flags.writeable = False
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = hands.process(image)
-
-    image.flags.writeable = True
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    
 
     
     

@@ -51,7 +51,7 @@ class OsuScheduler(Scheduler):
         if self.i < len(self.data):
             center = self.data[self.i][2]/1000.0
             time_tup = (center - self.duration/2,center + self.duration/2)
-            location_tup = (self.data[self.i][0],self.data[self.i][1]+100) #to make them stay on screen
+            location_tup = (self.data[self.i][0]+100,self.data[self.i][1]+100) #to make them stay on screen
             out = Hittable(time_tup,location_tup)
             self.i += 1
             return out

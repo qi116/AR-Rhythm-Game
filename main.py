@@ -60,6 +60,17 @@ def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,s
 #   return image
 
   
+#input stuff:
+name = ''
+while 1:
+  num = input("Pick a song number: ")
+  if num == '1':
+    name = 'sasageyo'
+    break
+  if num == '2':
+    name = 'photograph'
+    break
+  
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -70,12 +81,12 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 currentHitObject = 0
 timer = Timer()
 timer.start()
-playsound("./songs/sasageyo.mp3", block=False)
+playsound('./songs/' + name + '.mp3', block=False)
 
 pressed = False
 
 hittable_stack = []
-scheduler = OsuScheduler("./sasageyo.txt",size=(screen_width,screen_height))
+scheduler = OsuScheduler("./songs/" + name+ ".txt",size=(screen_width,screen_height))
 #play music right here
 with mp_hands.Hands(
     model_complexity=0,
@@ -158,7 +169,7 @@ with mp_hands.Hands(
     pressed = False    
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(32) == 32:
-      print('Pressed a')
+      print('Pressed space')
       pressed = True
     if cv2.waitKey(5) & 0xFF == 27:
       break

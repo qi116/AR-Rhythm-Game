@@ -70,6 +70,8 @@ timer = Timer()
 timer.start()
 playsound("./songs/sasageyo.mp3", block=False)
 
+pressed = False
+
 hittable_stack = []
 scheduler = OsuScheduler("./sasageyo.txt",size=(screen_width,screen_height))
 #play music right here
@@ -135,7 +137,7 @@ with mp_hands.Hands(
         if results.multi_hand_landmarks:
           for lands in results.multi_hand_landmarks:
             hit = detect_hit(lands.landmark,rectangle_coords2,rectangle_coords)
-            if hit and hittable_stack[0].hittable:
+            if pressed and hit and hittable_stack[0].hittable:
               print("hit") 
               hittable_stack.pop(0)
               scoreboard.addScore(100)
@@ -146,8 +148,11 @@ with mp_hands.Hands(
       #   currentHitObject+=1
       except Exception as e:
         print(e)
-        
+    pressed = False    
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
+    if cv2.waitKey(32) == 32:
+      print('Pressed a')
+      pressed = True
     if cv2.waitKey(5) & 0xFF == 27:
       break
 cap.release()

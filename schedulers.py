@@ -39,7 +39,7 @@ class OsuScheduler(Scheduler):
                     if i < 4:
                         row[i] = int(row[i])
                 row[0]=int(row[0]/640*size[0])
-                row[1]= int(row[0]/480*size[1])
+                row[1]= int(row[1]/480*size[1])
 
         self.data = data
         super().__init__([],[])
@@ -103,7 +103,8 @@ class Hittable:
             return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
         elif self.time_tup[0] < time < self.time_tup[1]:
             return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,255,0), 7)
-
+        else:
+            return image
 
 
     def __str__(self):

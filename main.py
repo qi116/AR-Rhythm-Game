@@ -107,6 +107,7 @@ with mp_hands.Hands(
       if hold == None:
         break
       hittable_stack.append(hold)
+    i = 0
     for i in range(len(hittable_stack)):
       if hittable_stack[i] and hittable_stack[i].time_tup[1] >= t:
         break
@@ -133,7 +134,7 @@ with mp_hands.Hands(
     
     image = cv2.flip(image, 1)
     image = cv2.putText(image, str(scoreboard.getScore()), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
-    image = cv2.putText(image, str(scoreboard.getMultiplier()) + "x", (600, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+    image = cv2.putText(image, str(scoreboard.getMultiplier()) + "x", (560, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
 
     image = cv2.flip(image, 1)
     

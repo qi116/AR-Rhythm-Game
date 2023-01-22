@@ -106,7 +106,7 @@ with mp_hands.Hands(
       hold = next(scheduler)
       if hold == None:
         break
-      hittable_stack.append(next(scheduler))
+      hittable_stack.append(hold)
     for i in range(len(hittable_stack)):
       if hittable_stack[i] and hittable_stack[i].time_tup[1] >= t:
         break

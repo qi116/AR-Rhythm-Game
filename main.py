@@ -19,12 +19,14 @@ screen_height = 360
 
 scoreboard = Scoreboard(0, 1)
 
+#counter = 1
+
 def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,screen_height)):
   normalized_x1 = rectangle_coords1[0]/size[0]
   normalized_y1 = rectangle_coords1[1]/size[1]
   normalized_x2 = rectangle_coords2[0]/size[0]
   normalized_y2 = rectangle_coords2[1]/size[1]
-  return normalized_x1 < landmark[8].x < normalized_x2 and normalized_y1 < landmark[8].y < normalized_y2
+  return normalized_x1 < landmark[7].x < normalized_x2 and normalized_y1 < landmark[7].y < normalized_y2
 
 
 
@@ -85,6 +87,9 @@ with mp_hands.Hands(
     image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
     t = timer.getTime()
     while scheduler.next_time() < t:
+      hold = next(scheduler)
+      if hold == None:
+        break
       hittable_stack.append(next(scheduler))
     for i in range(len(hittable_stack)):
       if hittable_stack[i].time_tup[1] >= t:
@@ -108,16 +113,7 @@ with mp_hands.Hands(
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-    if results.multi_hand_landmarks:
-      #print("here2")
-      for hand_landmarks in results.multi_hand_landmarks:
-        #print('here')
-        mp_drawing.draw_landmarks(
-            image,
-            hand_landmarks,
-            mp_hands.HAND_CONNECTIONS,
-            mp_drawing_styles.get_default_hand_landmarks_style(),
-            mp_drawing_styles.get_default_hand_connections_style())
+    
     
     #image = handle(results, image)
     image = cv2.flip(image, 1)
@@ -148,6 +144,16 @@ with mp_hands.Hands(
       #   currentHitObject+=1
       except Exception as e:
         print(e)
+    if results.multi_hand_landmarks:
+      #print("here2")
+      for hand_landmarks in results.multi_hand_landmarks:
+        #print('here')
+        mp_drawing.draw_landmarks(
+            image,
+            hand_landmarks,
+            mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
     pressed = False    
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(32) == 32:

@@ -1,8 +1,9 @@
 import cv2
 import mediapipe as mp
 import random
+#from main import *
 
-counter = 1
+
 def opensong(path):
         file = open(path, 'r')
         lines = file.readlines()
@@ -58,9 +59,12 @@ class OsuScheduler(Scheduler):
             self.i += 1
             return out
         else:
-            raise StopIteration
+            return None
+            #raise StopIteration
 
     def next_time(self):
+        if self.i >= len(self.data):
+            return 0
         return self.data[self.i][2]/1000.0 - self.duration/2 - 1.5
 
 class RandomScheduler(Scheduler):
@@ -88,6 +92,7 @@ class RandomScheduler(Scheduler):
             raise StopIteration
             
 class Hittable:
+    
     def __init__(self,time_tup,location_tup,type) -> None:
             self.time_tup = time_tup
             self.location_tup = location_tup
@@ -95,33 +100,46 @@ class Hittable:
             self.phases = 10
             self.load_time = 1.5
             self.hittable = False
+            global counter
+            if (self.type == 5 or self.type == 6):
+                counter = 1
+            else:
+                counter += 1
+            self.currCounter = counter
     def isShown(self,time):
         return self.time_tup[0]-1.5 <= time <= self.time_tup[1] #includes loading time
 
     def apply(self,image,time):
         if self.time_tup[0]-1.5 < time < self.time_tup[0]:
-            if (self.type == 5 or self.type == 6):
-                counter = 1
-            else:
-                counter += 1
+            
             phase = (self.time_tup[0]-time)/1.5
 
             color = (255*phase,255*(1-phase),0)
-            rec = cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
-            cv2.flip(image, 1)
-            cv2.putText(image, str(counter), (self.location_tup[0] + 50, self.location_tup[1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,0), cv2.LINE_AA)
-            cv2.flip(image, 1)
-            return rec
+            image = cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
+            
+            #filling rectangle
+            center = [x - 50 for x in self.location_tup]
+            phase = (1-phase) * 50
+            image = cv2.rectangle(image, [x + int(phase) for x in center], [x - int(phase) for x in center], color, -1)
+            
+            overlay = image.copy()
+            cv2.rectangle(overlay, [x + int(phase) for x in center], [x - int(phase) for x in center], color, -1)  
+            alpha = 0.4
+            image = cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0)
+
+
+            image = cv2.flip(image, 1)
+            image = cv2.putText(image, str(self.currCounter), (640 - self.location_tup[0] + 25, self.location_tup[1] - 25), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0),2, cv2.LINE_AA)
+            image = cv2.flip(image, 1)
+            return image
         elif self.time_tup[0] < time < self.time_tup[1]:
             self.hittable = True
-            if (self.type == 5 or self.type == 6):
-                counter = 1
-            else:
-                counter += 1
-            rec = cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,0,255), 7)
-            cv2.flip(image, 1)
-            cv2.putText(image, str(counter), (self.location_tup[0] + 50, self.location_tup[1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,0), cv2.LINE_AA)
-            cv2.flip(image, 1)
+            
+            image = cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,0,255), -1)
+            image = cv2.flip(image, 1)
+            image = cv2.putText(image, str(self.currCounter), (640 - self.location_tup[0] + 25 , self.location_tup[1] - 25), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0), 2, cv2.LINE_AA)
+            image = cv2.flip(image, 1)
+            return image
         else:
             self.hittable = False
             return image

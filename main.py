@@ -5,76 +5,18 @@ import os
 import time
 from schedulers import opensong
 from timer import Timer
-rectangle_frames = 0
-rectangle_coords = (200,200)
-
-# def image_loader(self, image, path):
-#     img2 = Image.open(r'path')
-#     image.paste(img2, (50, 50), mask = img2)
-#     return image
-
-def detect_hit(landmark,rectangle_coords1,rectangle_coords2):
-  normalized_x1 = rectangle_coords1[0]/1280.0
-  normalized_y1 = rectangle_coords1[1]/720.0
-  normalized_x2 = rectangle_coords2[0]/1280.0
-  normalized_y2 = rectangle_coords2[1]/720.0
-  return normalized_x1 < landmark[17].x < normalized_x2 and normalized_y1 < landmark[17].y < normalized_y2
-
+from schedulers import *
 screen_width = 640
 screen_height = 360
 
+def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,screen_height)):
+  normalized_x1 = rectangle_coords1[0]/size[0]
+  normalized_y1 = rectangle_coords1[1]/size[1]
+  normalized_x2 = rectangle_coords2[0]/size[0]
+  normalized_y2 = rectangle_coords2[1]/size[1]
+  return normalized_x1 < landmark[17].x < normalized_x2 and normalized_y1 < landmark[17].y < normalized_y2
 
 
-
-clicks = opensong(os.getcwd() + "\songs\sasageyo.txt")
-for click in clicks:
-  print(click)
-
-def handle(results, image):
-  #print('here')
-
-  BLUE = (255, 0, 0)
-  radius = 25
-
-  try: 
-    leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
-    lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
-
-    rightx = (results.pose_landmarks.landmark[22].x + results.pose_landmarks.landmark[18].x) / 2
-    righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
-
-    centerR = (int(rightx*(screen_width)),int(righty*(screen_height)))
-    centerL = (int(leftx*(screen_width)),int(lefty*(screen_height)))
-
-    if (rightx < .5 and righty < .5):
-      print("top right - RH")
-    if (rightx < .5 and righty > .5):
-      print("bottom right - RH")
-    if (rightx > .5 and righty < .5):
-      print("top left - RH")
-    if (rightx > .5 and righty > .5):
-      print("bottom left - RH")
-
-
-    image = cv2.circle(image, centerR, 50, BLUE, 2)
-    image = cv2.circle(image, centerL, 50, BLUE, 2)
-    return image
-  except:
-    center = (0,0)
-    image = cv2.circle(image, center, 50, BLUE, 2)
-    image = cv2.circle(image, center, 50, BLUE, 2)
-    return image
-
-
-  if (leftx < .5 and lefty < .5):
-    print("top right - LH")
-  if (leftx < .5 and lefty > .5):
-    print("bottom right - LH")
-  if (leftx > .5 and lefty < .5):
-    print("top left - LH")
-  if (leftx > .5 and lefty > .5):
-    print("bottom left - LH")
-  
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -89,14 +31,25 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 currentHitObject = 0
 timer = Timer()
 timer.start()
-
+hittable_stack = []
+scheduler = OsuScheduler("./sasageyo.txt",size=(screen_width,screen_height))
+#play music right here
 with mp_pose.Pose(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as pose:
   while cap.isOpened():
     success, image = cap.read()
     image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
-
+    t = timer.getTime()
+    while scheduler.next_time() < t:
+      hittable_stack.append(next(scheduler))
+    for i in range(len(hittable_stack)):
+      if hittable_stack[i].time_tup[1] >= t:
+        break
+    hittable_stack = hittable_stack[i:]
+    for item in hittable_stack:
+      image = item.apply(image,t)
+        
 
     if not success:
       print("Ignoring empty camera frame.")
@@ -109,9 +62,6 @@ with mp_pose.Pose(
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pose.process(image)
 
-    #print(results.pose_landmarks.landmark[17].y)
-    image = handle(results, image)
-
     #image = imageStore[1]
     # Draw the pose annotation on the image.
     image.flags.writeable = True
@@ -122,25 +72,21 @@ with mp_pose.Pose(
         mp_pose.POSE_CONNECTIONS,
         landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
     # Flip the image horizontally for a selfie-view display.
-    if rectangle_frames == 0:
-      if random.randint(0,60) > 55:
-        rectangle_frames = 50
-        rectangle_coords = (int(random.random()*(1280-100)),int(random.random()*(720-100)))
-        rectangle_coords2 = (rectangle_coords[0]+100,rectangle_coords[1]+100)
-    else:
-      print("rectangle:",rectangle_coords,rectangle_coords2)
-      print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
-      image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
+    try:
+      rectangle_coords =   hittable_stack[0].location_tup
+      rectangle_coords2 = (rectangle_coords[0]+100,rectangle_coords[1]+100)
+      # print("rectangle:",rectangle_coords,rectangle_coords2,"time:",t)
+      # print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
+      # image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
       hit = detect_hit(results.pose_landmarks.landmark,rectangle_coords,rectangle_coords2)
       if hit:
-        rectangle_frames = 1
-        print("hit")
-      rectangle_frames-=1 
-    if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
-      curr = clicks[currentHitObject]
-      image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
-      currentHitObject+=1
-
+        print("hit") 
+    # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
+    #   curr = clicks[currentHitObject]
+    #   image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
+    #   currentHitObject+=1
+    except:
+      print("no landmark")
         
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(5) & 0xFF == 27:

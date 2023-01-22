@@ -38,8 +38,9 @@ class OsuScheduler(Scheduler):
                 for i in range(len(row)):
                     if i < 4:
                         row[i] = int(row[i])
-                row[0]=row[0]/640.0*size[0]
-                row[1]= row[0]/480.0*size[1]
+                row[0]=int(row[0]/640*size[0])
+                row[1]= int(row[0]/480*size[1])
+
         self.data = data
         super().__init__([],[])
 
@@ -56,6 +57,9 @@ class OsuScheduler(Scheduler):
             return out
         else:
             raise StopIteration
+
+    def next_time(self):
+        return self.data[self.i][2]/1000.0 - self.duration/2 - 1.5
 
 class RandomScheduler(Scheduler):
     def __init__(self,duration,length,size=(1280,720)):
@@ -85,6 +89,7 @@ class Hittable:
     def __init__(self,time_tup,location_tup,type="circle") -> None:
             self.time_tup = time_tup
             self.location_tup = location_tup
+            print(location_tup)
             self.type = type
             self.phases = 10
             self.load_time = 1.5
@@ -95,9 +100,9 @@ class Hittable:
         if self.time_tup[0]-1.5 < time < self.time_tup[0]:
             phase = (self.time_tup[0]-time)/1.5
             color = (255*phase,255*(1-phase),0)
-            return cv2.rectangle(image, self.location_tup, (x -100 for x in self.location_tup), color, 7)
+            return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], color, 7)
         elif self.time_tup[0] < time < self.time_tup[1]:
-            return cv2.rectangle(image, self.location_tup, (x -100 for x in self.location_tup), (0,255,0), 7)
+            return cv2.rectangle(image, self.location_tup, [x -100 for x in self.location_tup], (0,255,0), 7)
 
 
 
@@ -107,7 +112,8 @@ class Hittable:
         
 if __name__ == "__main__":
     s = OsuScheduler("./sasageyo.txt")
-    for hit in iter(s):
-        print(hit)
+    print(s.data)
+    # for hit in iter(s):
+    #     print(hit)
 
 

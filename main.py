@@ -61,15 +61,15 @@ def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,s
 
   
 #input stuff:
-name = ''
-while 1:
-  num = input("Pick a song number: ")
-  if num == '1':
-    name = 'sasageyo'
-    break
-  if num == '2':
-    name = 'photograph'
-    break
+name = 'sasageyo'
+# while 1:
+#   num = input("Pick a song number: ")
+#   if num == '1':
+#     name = 'sasageyo'
+#     break
+#   if num == '2':
+#     name = 'photograph'
+#     break
   
 
 mp_drawing = mp.solutions.drawing_utils
@@ -109,10 +109,15 @@ with mp_hands.Hands(
         break
       hittable_stack.append(next(scheduler))
     for i in range(len(hittable_stack)):
-      if hittable_stack[i].time_tup[1] >= t:
+      if hittable_stack[i] and hittable_stack[i].time_tup[1] >= t:
         break
+    if i != 0:
+      print('miss')
+      scoreboard.resetMultiplier()
     hittable_stack = hittable_stack[i:]
     for item in hittable_stack:
+      if item == None:
+        break
       image = item.apply(image,t)
         
 
@@ -130,6 +135,8 @@ with mp_hands.Hands(
     #image = handle(results, image)
     image = cv2.flip(image, 1)
     image = cv2.putText(image, str(scoreboard.getScore()), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+    image = cv2.putText(image, str(scoreboard.getMultiplier()) + "x", (600, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+
     image = cv2.flip(image, 1)
     #image = imageStore[1]
     # Draw the pose annotation on the image.
@@ -137,6 +144,8 @@ with mp_hands.Hands(
     # Flip the image horizontally for a selfie-view display.
     if len(hittable_stack):
       try:
+        if not hittable_stack:
+          break
         rectangle_coords =   hittable_stack[0].location_tup
         rectangle_coords2 = (rectangle_coords[0]-100,rectangle_coords[1]-100)
         # print("rectangle:",rectangle_coords,rectangle_coords2,"time:",t)
@@ -149,6 +158,7 @@ with mp_hands.Hands(
               print("hit") 
               hittable_stack.pop(0)
               scoreboard.addScore(100)
+              scoreboard.setMultiplier(scoreboard.getMultiplier() + 1)
               break
       # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
       #   curr = clicks[currentHitObject]
@@ -156,6 +166,7 @@ with mp_hands.Hands(
       #   currentHitObject+=1
       except Exception as e:
         print(e)
+        break
     if results.multi_hand_landmarks:
       #print("here2")
       for hand_landmarks in results.multi_hand_landmarks:

@@ -104,6 +104,7 @@ class Hittable:
             if (self.type == 5 or self.type == 6):
                 counter = 1
             else:
+                print(self.location_tup)
                 counter += 1
             self.currCounter = counter
     def isShown(self,time):

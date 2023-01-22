@@ -8,12 +8,16 @@ from timer import Timer
 from playsound import playsound
 from PIL import Image
 import numpy as np
+from scoreboard import Scoreboard
+
 rectangle_frames = 0
 rectangle_coords = (200,200)
 
 
 screen_width = 640
 screen_height = 360
+
+scoreboard = Scoreboard(0, 1)
 
 def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,screen_height)):
   normalized_x1 = rectangle_coords1[0]/size[0]
@@ -28,30 +32,30 @@ def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,s
 # for click in clicks:
 #   print(click)
 
-def handle(results, image):
-  #print('here')
+# def handle(results, image):
+#   #print('here')
 
-  BLUE = (255, 0, 0)
-  radius = 25
-  lands = results.multi_hand_landmarks
-  #print(lands)
-  if lands:
+#   BLUE = (255, 0, 0)
+#   radius = 25
+#   lands = results.multi_hand_landmarks
+#   #print(lands)
+#   if lands:
     
-    for land in lands:
+#     for land in lands:
       
-      try: 
-        #print(land.landmark[0].x)
-        width = (land.landmark[5].x + land.landmark[20].x)/2
-        height = (land.landmark[0].y + land.landmark[12].y)/2
-        center = (int(width*(screen_width)),int(height*(screen_height)))
-        image = cv2.circle(image, center, radius, BLUE, -1)
+#       try: 
+#         #print(land.landmark[0].x)
+#         width = (land.landmark[5].x + land.landmark[20].x)/2
+#         height = (land.landmark[0].y + land.landmark[12].y)/2
+#         center = (int(width*(screen_width)),int(height*(screen_height)))
+#         image = cv2.circle(image, center, radius, BLUE, -1)
         
-        # font = cv2.FONT_HERSHEY_SIMPLEX
-        # image = cv2.putText(image,'R',(centerR[0] - radius, centerR[1] + radius), font, 2,(255,255,255),2,cv2.LINE_AA)
+#         # font = cv2.FONT_HERSHEY_SIMPLEX
+#         # image = cv2.putText(image,'R',(centerR[0] - radius, centerR[1] + radius), font, 2,(255,255,255),2,cv2.LINE_AA)
 
-      except:
-        print("fail")
-  return image
+#       except:
+#         print("fail")
+#   return image
 
   
 
@@ -63,8 +67,9 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
 currentHitObject = 0
 timer = Timer()
-playsound(os.getcwd() + "\songs\sasageyo.mp3", block=False)
 timer.start()
+playsound("./songs/sasageyo.mp3", block=False)
+
 hittable_stack = []
 scheduler = OsuScheduler("./sasageyo.txt",size=(screen_width,screen_height))
 #play music right here
@@ -112,7 +117,10 @@ with mp_hands.Hands(
             mp_drawing_styles.get_default_hand_landmarks_style(),
             mp_drawing_styles.get_default_hand_connections_style())
     
-    image = handle(results, image)
+    #image = handle(results, image)
+    image = cv2.flip(image, 1)
+    image = cv2.putText(image, str(scoreboard.getScore()), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+    image = cv2.flip(image, 1)
     #image = imageStore[1]
     # Draw the pose annotation on the image.
     
@@ -130,6 +138,7 @@ with mp_hands.Hands(
             if hit and hittable_stack[0].hittable:
               print("hit") 
               hittable_stack.pop(0)
+              scoreboard.addScore(100)
               break
       # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
       #   curr = clicks[currentHitObject]

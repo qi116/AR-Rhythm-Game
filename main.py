@@ -20,7 +20,7 @@ def detect_hit(landmark,rectangle_coords1,rectangle_coords2,size=(screen_width,s
   normalized_y1 = rectangle_coords1[1]/size[1]
   normalized_x2 = rectangle_coords2[0]/size[0]
   normalized_y2 = rectangle_coords2[1]/size[1]
-  return normalized_x1 < landmark[17].x < normalized_x2 and normalized_y1 < landmark[17].y < normalized_y2
+  return normalized_x1 < landmark[8].x < normalized_x2 and normalized_y1 < landmark[8].y < normalized_y2
 
 
 
@@ -33,34 +33,31 @@ def handle(results, image):
 
   BLUE = (255, 0, 0)
   radius = 25
-
-  try: 
-    leftx = (results.pose_landmarks.landmark[19].x + results.pose_landmarks.landmark[15].x) / 2
-    lefty = (results.pose_landmarks.landmark[19].y + results.pose_landmarks.landmark[15].y) / 2
-
-    rightx = (results.pose_landmarks.landmark[22].x + results.pose_landmarks.landmark[18].x) / 2
-    righty = (results.pose_landmarks.landmark[20].y + results.pose_landmarks.landmark[16].y) / 2
-
-    centerR = (int(rightx*(screen_width)),int(righty*(screen_height)))
-    centerL = (int(leftx*(screen_width)),int(lefty*(screen_height)))
-
-
-    image = cv2.circle(image, centerR, radius, BLUE, -1)
-    image = cv2.circle(image, centerL, radius, BLUE, -1)
-
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    image = cv2.putText(image,'R',(centerR[0] - radius, centerR[1] + radius), font, 2,(255,255,255),2,cv2.LINE_AA)
-
-    return image
-  except:
+  lands = results.multi_hand_landmarks
+  #print(lands)
+  if lands:
     
-    return image
+    for land in lands:
+      
+      try: 
+        #print(land.landmark[0].x)
+        width = (land.landmark[5].x + land.landmark[20].x)/2
+        height = (land.landmark[0].y + land.landmark[12].y)/2
+        center = (int(width*(screen_width)),int(height*(screen_height)))
+        image = cv2.circle(image, center, radius, BLUE, -1)
+        
+        # font = cv2.FONT_HERSHEY_SIMPLEX
+        # image = cv2.putText(image,'R',(centerR[0] - radius, centerR[1] + radius), font, 2,(255,255,255),2,cv2.LINE_AA)
+
+      except:
+        print("fail")
+  return image
 
   
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
-mp_pose = mp.solutions.pose
+mp_hands = mp.solutions.hands
 
 cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
@@ -71,9 +68,11 @@ timer.start()
 hittable_stack = []
 scheduler = OsuScheduler("./sasageyo.txt",size=(screen_width,screen_height))
 #play music right here
-with mp_pose.Pose(
+with mp_hands.Hands(
+    model_complexity=0,
     min_detection_confidence=0.5,
-    min_tracking_confidence=0.5) as pose:
+    min_tracking_confidence=0.5) as hands:
+  #print(hands)
   while cap.isOpened():
     success, image = cap.read()
     image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
@@ -97,17 +96,26 @@ with mp_pose.Pose(
     # pass by reference.
     image.flags.writeable = False
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = pose.process(image)
+    results = hands.process(image)
+
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    if results.multi_hand_landmarks:
+      #print("here2")
+      for hand_landmarks in results.multi_hand_landmarks:
+        #print('here')
+        mp_drawing.draw_landmarks(
+            image,
+            hand_landmarks,
+            mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
+    
     image = handle(results, image)
     #image = imageStore[1]
     # Draw the pose annotation on the image.
-    image.flags.writeable = True
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    mp_drawing.draw_landmarks(
-        image,
-        results.pose_landmarks,
-        mp_pose.POSE_CONNECTIONS,
-        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+    
     # Flip the image horizontally for a selfie-view display.
     try:
       rectangle_coords =   hittable_stack[0].location_tup
@@ -115,15 +123,17 @@ with mp_pose.Pose(
       # print("rectangle:",rectangle_coords,rectangle_coords2,"time:",t)
       # print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
       # image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
-      hit = detect_hit(results.pose_landmarks.landmark,rectangle_coords,rectangle_coords2)
+      if results.multi_hand_landmarks:
+        for lands in results.multi_hand_landmarks:
+          hit = detect_hit(lands.landmark,rectangle_coords,rectangle_coords2)
       if hit:
         print("hit") 
     # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
     #   curr = clicks[currentHitObject]
     #   image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
     #   currentHitObject+=1
-    except:
-      print("no landmark")
+    except Exception as e:
+      print(e)
         
     cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
     if cv2.waitKey(5) & 0xFF == 27:

@@ -81,18 +81,17 @@ cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 currentHitObject = 0
 timer = Timer()
 timer.start()
+#play music right here
 playsound('./songs/' + name + '.mp3', block=False)
 
 pressed = False
 
 hittable_stack = []
 scheduler = OsuScheduler("./songs/" + name+ ".txt",size=(screen_width,screen_height))
-#play music right here
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as hands:
-  #print(hands)
   while cap.isOpened():
     success, image = cap.read()
     image = cv2.resize(image, (screen_width,screen_height), interpolation =cv2.INTER_AREA)
@@ -132,14 +131,13 @@ with mp_hands.Hands(
 
     
     
-    #image = handle(results, image)
     image = cv2.flip(image, 1)
     image = cv2.putText(image, str(scoreboard.getScore()), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
     image = cv2.putText(image, str(scoreboard.getMultiplier()) + "x", (600, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
 
     image = cv2.flip(image, 1)
-    #image = imageStore[1]
-    # Draw the pose annotation on the image.
+    
+    
     
     # Flip the image horizontally for a selfie-view display.
     if len(hittable_stack):
@@ -148,9 +146,7 @@ with mp_hands.Hands(
           break
         rectangle_coords =   hittable_stack[0].location_tup
         rectangle_coords2 = (rectangle_coords[0]-100,rectangle_coords[1]-100)
-        # print("rectangle:",rectangle_coords,rectangle_coords2,"time:",t)
-        # print(1-results.pose_landmarks.landmark[17].x,results.pose_landmarks.landmark[17].y)
-        # image = cv2.rectangle(image, rectangle_coords, rectangle_coords2, (255,0,0), 7)
+        
         if results.multi_hand_landmarks:
           for lands in results.multi_hand_landmarks:
             hit = detect_hit(lands.landmark,rectangle_coords2,rectangle_coords)
@@ -160,17 +156,13 @@ with mp_hands.Hands(
               scoreboard.addScore(100)
               scoreboard.setMultiplier(scoreboard.getMultiplier() + 1)
               break
-      # if timer.getTime() * 1000 < clicks[currentHitObject].time + 50 and                           timer.getTime() * 1000 > clicks[currentHitObject].time - 50:
-      #   curr = clicks[currentHitObject]
-      #   image = cv2.rectangle(image, (curr.x, curr.y), (curr.x+100,curr.y+100), (0,255,0), 7)
-      #   currentHitObject+=1
+      
       except Exception as e:
         print(e)
         break
+    # Draw the pose annotation on the image.
     if results.multi_hand_landmarks:
-      #print("here2")
       for hand_landmarks in results.multi_hand_landmarks:
-        #print('here')
         mp_drawing.draw_landmarks(
             image,
             hand_landmarks,

@@ -1,0 +1,4 @@
+mediapipe==0.9.0.1
+opencv-contrib-python==4.7.0.68
+opencv-python==4.7.0.68
+playsound==1.3.0

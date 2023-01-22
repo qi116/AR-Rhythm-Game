@@ -123,10 +123,10 @@ class Hittable:
             phase = (1-phase) * 50
             image = cv2.rectangle(image, [x + int(phase) for x in center], [x - int(phase) for x in center], color, -1)
             
-            overlay = image.copy()
-            cv2.rectangle(overlay, [x + int(phase) for x in center], [x - int(phase) for x in center], color, -1)  
-            alpha = 0.4
-            image = cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0)
+            # overlay = image.copy()
+            # cv2.rectangle(overlay, [x + int(phase) for x in center], [x - int(phase) for x in center], color, -1)  
+            # alpha = 0.4
+            # image = cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0)
 
 
             image = cv2.flip(image, 1)

@@ -1,4 +1,4 @@
-# Boilermake
+# AR Rhythm Game
 
 ## What is it?
 An osu! like rhythm game that uses Mediapipe to play with your webcam.
